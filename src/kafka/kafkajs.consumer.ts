@@ -5,7 +5,6 @@ import {
   ConsumerSubscribeTopics,
   Kafka,
   KafkaMessage,
-  Logger,
 } from 'kafkajs';
 import { sleep } from 'src/sleep';
 import { IConsumer } from './consumer.interface';

@@ -1,24 +1,25 @@
 import { Injectable, OnApplicationShutdown } from '@nestjs/common';
-import {
-  ConsumerRunConfig,
-  ConsumerSubscribeTopics,
-  Kafka,
-  Consumer,
-} from 'kafkajs';
+import { ConfigService } from '@nestjs/config';
+import { IConsumer } from './consumer.interface';
+import { IKafkaJsConsumerOptions } from './kafkajs-consumer-options.interface';
+import { KafkajsConsumer } from './kafkajs.consumer';
 
 @Injectable()
 export class ConsumerService implements OnApplicationShutdown {
-  private readonly kafka = new Kafka({
-    brokers: ['localhost:9092'],
-  });
+  private readonly consumers: IConsumer[] = []; // wants only one producer and listen to multiple consumers
 
-  private readonly consumers: Consumer[] = []; // wants only one producer and listen to multiple consumers
+  // Need to add the connection to the .env file
+  constructor(private readonly configService: ConfigService) {}
 
-  async consume(topic: ConsumerSubscribeTopics, config: ConsumerRunConfig) {
-    const consumer = this.kafka.consumer({ groupId: 'nestjs-kafka' });
+  async consume({ topic, config, onMessage }: IKafkaJsConsumerOptions) {
+    const consumer = new KafkajsConsumer(
+      topic,
+      config,
+      this.configService.get('KAFKA_BROKER'),
+    );
     await consumer.connect();
-    await consumer.subscribe(topic);
-    await consumer.run(config); // run certain code when a message is perceived
+    // consume method to listen to messages
+    await consumer.consume(onMessage);
     this.consumers.push(consumer);
   }
 

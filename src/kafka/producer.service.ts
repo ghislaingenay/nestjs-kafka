@@ -21,7 +21,8 @@ export class ProducerService implements OnModuleInit, OnApplicationShutdown {
     await this.producer.send(record); // send the record to the server
   }
 
-  async OnApplicationShutdown() {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async onApplicationShutdown(signal?: string) {
     await this.producer.disconnect(); // disconnect the producer from the server
   }
 }

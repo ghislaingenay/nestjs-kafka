@@ -23,7 +23,7 @@ export class KafkajsConsumer implements IConsumer {
       brokers: [broker],
     });
     this.consumer = this.kafka.consumer(config);
-    this.logger = new Logger(`${topic[0].topic}-${config.groupId}`);
+    this.logger = new Logger(`${topic.topics}-${config.groupId}`);
   }
 
   async connect(): Promise<void> {
@@ -48,9 +48,7 @@ export class KafkajsConsumer implements IConsumer {
     // Run our code when we receive a message
     await this.consumer.run({
       eachMessage: async ({ partition, message }) => {
-        this.logger.debug(
-          `Processing message ${message.key} on partition ${partition}`,
-        );
+        this.logger.debug(`Processing message partition ${partition}`);
         await onMessage(message);
       },
     });

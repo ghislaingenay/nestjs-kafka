@@ -6,9 +6,8 @@ export class AppService {
   constructor(private readonly producerService: ProducerService) {}
 
   async getHello() {
-    await this.producerService.produce({
-      topic: 'test-topic',
-      messages: [{ value: 'The message was produced' }],
+    await this.producerService.produce('test-topic', {
+      value: 'The message was produced',
     });
     return 'Hello World!';
   }

@@ -12,7 +12,7 @@ export class TestTopicConsumer implements OnModuleInit {
   async onModuleInit() {
     // all consumers inside a consumer group with the same group Id will be consuming from a given topic amoongst n number of partitions => partitions will be distributed to all memebers inside this particular group
     await this.consumerService.consume({
-      topic: { topics: ['test-topic'], fromBeginning: true },
+      topic: { topics: ['test-topic'] },
       config: { groupId: 'test-consumer' },
       onMessage: async (message) => {
         console.log(message.value.toString());

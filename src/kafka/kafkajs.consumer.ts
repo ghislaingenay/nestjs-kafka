@@ -3,6 +3,7 @@ import {
   Consumer,
   ConsumerConfig,
   ConsumerSubscribeTopics,
+  EachMessagePayload,
   Kafka,
   KafkaMessage,
 } from 'kafkajs';
@@ -21,7 +22,10 @@ export class KafkajsConsumer implements IConsumer {
     broker: string,
   ) {
     this.kafka = new Kafka({
+      // Therefore the clientId should be shared across multiple instances in a cluster or horizontally scaled application, but distinct for each application.
       brokers: [broker],
+      connectionTimeout: 3000, // Time in milliseconds to wait for a successful connection
+      requestTimeout: 25000, // Time in milliseconds to wait for a successful request.
     });
     this.consumer = this.kafka.consumer(config);
     this.logger = new Logger(`${topic.topics}-${config.groupId}`);
@@ -45,11 +49,15 @@ export class KafkajsConsumer implements IConsumer {
   async consume(
     onMessage: (message: KafkaMessage) => Promise<void>,
   ): Promise<void> {
+    await this.connect();
+
     await this.consumer.subscribe(this.topic);
     // Run our code when we receive a message
     await this.consumer.run({
-      eachMessage: async ({ partition, message }) => {
-        this.logger.debug(`Processing message partition ${partition}`);
+      eachMessage: async (messagePayload: EachMessagePayload) => {
+        const { topic, partition, message } = messagePayload;
+        const prefix = `${topic}[${partition} | ${message.offset}] / ${message.timestamp}`;
+        this.logger.debug(`- ${prefix} ${message.key}#${message.value}`);
         try {
           await retry(async () => onMessage(message), {
             retries: 3,

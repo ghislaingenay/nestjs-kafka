@@ -1,5 +1,5 @@
 import { Logger } from '@nestjs/common';
-import { Kafka, Message, Producer } from 'kafkajs';
+import { CompressionTypes, Kafka, Message, Producer } from 'kafkajs';
 import { sleep } from 'src/sleep';
 import { IProducer } from './producer.interface';
 
@@ -10,14 +10,24 @@ export class KafkajsProducer implements IProducer {
 
   constructor(private readonly topic: string, broker: string) {
     this.kafka = new Kafka({
+      // Therefore the clientId should be shared across multiple instances in a cluster or horizontally scaled application, but distinct for each application.
       brokers: [broker],
+      connectionTimeout: 3000, // Time in milliseconds to wait for a successful connection
+      requestTimeout: 25000, // Time in milliseconds to wait for a successful request.
     });
-    this.producer = this.kafka.producer();
+    this.producer = this.kafka.producer({
+      transactionalId: 'my-transactional-producer',
+      maxInFlightRequests: 1,
+      idempotent: true,
+    });
     this.logger = new Logger(topic);
   }
 
+  // https://kafka.js.org/docs/transactions
+
   async produce(message: Message) {
     await this.producer.send({
+      compression: CompressionTypes.GZIP,
       topic: this.topic,
       messages: [message],
     });
